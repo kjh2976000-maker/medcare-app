@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B4F72"/>
+      <stop offset="100%" style="stop-color:#2E86C1"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- 알약 모양 -->
+  <rect x="140" y="160" width="120" height="200" rx="60" fill="#fff" opacity="0.95"/>
+  <rect x="140" y="160" width="120" height="100" rx="60" fill="#E74C3C" opacity="0.9"/>
+  <!-- 십자 마크 -->
+  <rect x="185" y="185" width="30" height="50" rx="4" fill="#fff"/>
+  <rect x="175" y="200" width="50" height="20" rx="4" fill="#fff"/>
+  <!-- 시계 -->
+  <circle cx="340" cy="240" r="80" fill="#fff" opacity="0.95"/>
+  <circle cx="340" cy="240" r="70" fill="#EAF2F8"/>
+  <!-- 시계 눈금 -->
+  <rect x="337" y="178" width="6" height="16" rx="3" fill="#1B4F72"/>
+  <rect x="337" y="286" width="6" height="16" rx="3" fill="#1B4F72"/>
+  <rect x="278" y="237" width="16" height="6" rx="3" fill="#1B4F72"/>
+  <rect x="386" y="237" width="16" height="6" rx="3" fill="#1B4F72"/>
+  <!-- 시계 바늘 -->
+  <line x1="340" y1="240" x2="340" y2="198" stroke="#1B4F72" stroke-width="6" stroke-linecap="round"/>
+  <line x1="340" y1="240" x2="370" y2="255" stroke="#E74C3C" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="340" cy="240" r="6" fill="#1B4F72"/>
+  <!-- 체크마크 -->
+  <circle cx="380" cy="370" r="50" fill="#27AE60"/>
+  <polyline points="358,370 375,387 405,355" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 하단 텍스트 -->
+  <text x="256" y="450" text-anchor="middle" font-family="sans-serif" font-size="36" font-weight="800" fill="#fff" opacity="0.9">복약케어</text>
+</svg>

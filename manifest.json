@@ -1,0 +1,25 @@
+{
+  "name": "복약케어 - 어르신 복약 관리",
+  "short_name": "복약케어",
+  "description": "어르신을 위한 쉽고 편한 복약 관리 앱. 약 알림, 복용 체크, 보호자 공유까지.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EBF0F5",
+  "theme_color": "#1B4F72",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

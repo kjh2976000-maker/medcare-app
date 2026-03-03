@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="복약케어">
+<meta name="theme-color" content="#1B4F72">
+<meta name="description" content="어르신을 위한 복약 관리 앱">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>복약케어</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #EBF0F5;
+    color: #1a1a2e;
+    min-height: 100vh;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+
+  /* ─── 상단 헤더 ─── */
+  .header {
+    background: #1B4F72;
+    color: #fff;
+    padding: 28px 24px 22px;
+  }
+  .header h1 {
+    font-size: 30px;
+    font-weight: 800;
+  }
+  .header .subtitle {
+    font-size: 18px;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  /* ─── 내용 영역 ─── */
+  .content {
+    padding: 20px;
+    padding-bottom: 120px;
+  }
+
+  /* ─── 빈 상태 ─── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7B8D9E;
+  }
+  .empty-state .icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+  .empty-state p {
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .empty-state .hint {
+    font-size: 18px;
+    margin-top: 8px;
+    color: #9AAFC0;
+  }
+
+  /* ─── 약 카드 ─── */
+  .med-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-left: 7px solid #2E86C1;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all 0.3s ease;
+  }
+  .med-card:active {
+    transform: scale(0.98);
+  }
+  .med-card.taken {
+    border-left-color: #27AE60;
+    background: #F0FAF4;
+  }
+  .med-card-body { flex: 1; min-width: 0; }
+  .med-card .med-name {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1B4F72;
+    margin-bottom: 10px;
+  }
+  .med-card .med-detail {
+    font-size: 19px;
+    color: #34495E;
+    margin-bottom: 5px;
+  }
+  .med-card .med-detail span {
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .med-card .med-memo {
+    font-size: 17px;
+    color: #2E86C1;
+    background: #EAF2F8;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .med-card .card-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .med-card .card-buttons button {
+    flex: 1;
+    padding: 14px 0;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .btn-edit {
+    background: #EAF2F8;
+    color: #1B4F72;
+  }
+  .btn-delete {
+    background: #FDEDEC;
+    color: #C0392B;
+  }
+  .btn-edit:active { background: #D4E6F1; }
+  .btn-delete:active { background: #F5B7B1; }
+
+  /* ─── 하단 추가 버튼 ─── */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(transparent 0%, #EBF0F5 40%);
+    z-index: 50;
+  }
+  .add-btn {
+    display: block;
+    width: 100%;
+    padding: 22px;
+    background: #1B4F72;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 24px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    box-shadow: 0 4px 16px rgba(27,79,114,0.35);
+  }
+  .add-btn:active { transform: scale(0.98); }
+
+  /* ─── 입력 폼 화면 ─── */
+  .form-screen {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #EBF0F5;
+    z-index: 200;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  .form-screen.show {
+    display: block;
+    transform: translateY(0);
+  }
+
+  .form-header {
+    background: #1B4F72;
+    color: #fff;
+    padding: 28px 24px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .form-header .back-btn {
+    width: 48px;
+    height: 48px;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 12px;
+    background: none;
+    color: #fff;
+    font-size: 26px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .form-header .back-btn:active { background: rgba(255,255,255,0.15); }
+  .form-header h2 {
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  .form-body {
+    padding: 24px 20px 140px;
+  }
+
+  .field {
+    margin-bottom: 24px;
+  }
+  .field label {
+    display: block;
+    font-size: 21px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #1B4F72;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 18px 16px;
+    font-size: 22px;
+    border: 2px solid #C8D6E0;
+    border-radius: 14px;
+    background: #fff;
+    color: #1a1a2e;
+    font-family: 'Noto Sans KR', sans-serif;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: #2E86C1;
+    box-shadow: 0 0 0 4px rgba(46,134,193,0.15);
+  }
+  .field textarea {
+    height: 90px;
+    resize: none;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg width='14' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%231B4F72' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 44px;
+  }
+
+  .time-row {
+    display: flex;
+    gap: 10px;
+  }
+  .time-row select {
+    flex: 1;
+  }
+
+  .save-btn {
+    display: block;
+    width: 100%;
+    padding: 22px;
+    background: #27AE60;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 24px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    box-shadow: 0 4px 16px rgba(39,174,96,0.3);
+    margin-top: 10px;
+  }
+  .save-btn:active { transform: scale(0.98); }
+
+  /* ─── 삭제 확인 팝업 ─── */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .overlay.show { display: flex; }
+
+  .dialog {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  .dialog .dialog-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .dialog h3 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #1a1a2e;
+  }
+  .dialog p {
+    font-size: 19px;
+    color: #5A6A7A;
+    margin-bottom: 24px;
+  }
+  .dialog-btns {
+    display: flex;
+    gap: 12px;
+  }
+  .dialog-btns button {
+    flex: 1;
+    padding: 18px 0;
+    border: none;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .dialog-cancel {
+    background: #EBF0F5;
+    color: #34495E;
+  }
+  .dialog-confirm {
+    background: #C0392B;
+    color: #fff;
+  }
+
+  .check-btn {
+    flex-shrink: 0;
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    border: 3px solid #C8D6E0;
+    background: #fff;
+    font-size: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: #C8D6E0;
+    margin-top: 4px;
+  }
+  .check-btn.checked {
+    background: #27AE60;
+    border-color: #27AE60;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(39,174,96,0.35);
+  }
+
+  /* ─── 알림 토스트 ─── */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a2e;
+    color: #fff;
+    padding: 16px 28px;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 400;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  /* ─── 글씨 크기 ─── */
+  body.font-large { font-size: 24px; }
+  body.font-large .med-card .med-name { font-size: 30px; }
+  body.font-large .med-card .med-detail { font-size: 22px; }
+  body.font-large .med-card .med-memo { font-size: 20px; }
+  body.font-small { font-size: 17px; }
+  body.font-small .med-card .med-name { font-size: 22px; }
+  body.font-small .med-card .med-detail { font-size: 16px; }
+  body.font-small .med-card .med-memo { font-size: 15px; }
+</style>
+</head>
+<body>
+
+<!-- ===== 홈 화면 ===== -->
+<div class="header">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h1>💊 복약케어</h1>
+    <button onclick="openSharePopup()" style="width:48px;height:48px;border-radius:12px;border:2px solid rgba(255,255,255,0.4);background:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">📤</button>
+    <button onclick="cycleFontSize()" id="fontBtn" style="width:48px;height:48px;border-radius:12px;border:2px solid rgba(255,255,255,0.4);background:none;color:#fff;font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans KR',sans-serif">가</button>
+  </div>
+  <div class="subtitle" id="todayDate"></div>
+  <div style="margin-top:14px;background:rgba(255,255,255,0.2);border-radius:10px;height:14px;overflow:hidden">
+    <div id="progressBar" style="height:100%;background:#2ECC71;border-radius:10px;transition:width 0.4s;width:0%"></div>
+  </div>
+  <div id="progressText" style="font-size:17px;margin-top:6px;font-weight:600">오늘 복용: 0 / 0</div>
+</div>
+
+<div style="display:flex;background:#fff;border-bottom:2px solid #D5DBE1">
+  <button class="tab-btn" id="tabCheck" onclick="switchTab('check')" style="flex:1;padding:14px 4px;font-size:17px;font-weight:700;color:#1B4F72;border:none;background:#EAF2F8;cursor:pointer;border-bottom:3px solid #1B4F72;font-family:'Noto Sans KR',sans-serif">✅ 복용</button>
+  <button class="tab-btn" id="tabHistory" onclick="switchTab('history')" style="flex:1;padding:14px 4px;font-size:17px;font-weight:700;color:#7B8D9E;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;font-family:'Noto Sans KR',sans-serif">📅 기록</button>
+  <button class="tab-btn" id="tabStats" onclick="switchTab('stats')" style="flex:1;padding:14px 4px;font-size:17px;font-weight:700;color:#7B8D9E;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;font-family:'Noto Sans KR',sans-serif">📊 통계</button>
+  <button class="tab-btn" id="tabManage" onclick="switchTab('manage')" style="flex:1;padding:14px 4px;font-size:17px;font-weight:700;color:#7B8D9E;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;font-family:'Noto Sans KR',sans-serif">📋 관리</button>
+</div>
+
+<!-- 알림 배너 -->
+<div id="notiBanner" style="display:none;margin:16px 20px 0;padding:18px 20px;background:#FFF9E6;border:2px solid #F1C40F;border-radius:14px;text-align:center">
+  <div style="font-size:20px;font-weight:700;color:#7D6608;margin-bottom:6px">🔔 알림을 켜면 복용 시간에 알려드려요</div>
+  <div style="font-size:16px;color:#9A8520;margin-bottom:10px">10분 전 미리알림 + 미복용시 반복알림</div>
+  <button onclick="requestNotiPermission()" style="padding:14px 32px;background:#1B4F72;color:#fff;border:none;border-radius:12px;font-size:19px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">알림 허용하기</button>
+</div>
+<div id="notiOk" style="display:none;margin:16px 20px 0;padding:14px 20px;background:#D5F5E3;border-radius:14px;text-align:center;font-size:18px;font-weight:600;color:#1E8449">🔔 알림이 설정되어 있습니다</div>
+<div id="notiDenied" style="display:none;margin:16px 20px 0;padding:14px 20px;background:#FDEDEC;border-radius:14px;text-align:center;font-size:18px;font-weight:600;color:#C0392B">🔕 알림이 차단되었습니다 · 브라우저 설정에서 허용해주세요</div>
+
+<!-- 설치 안내 -->
+<div id="installBanner" style="display:none;margin:12px 20px 0;padding:16px 20px;background:#E8F0FE;border:2px solid #5B9BD5;border-radius:14px;text-align:center">
+  <div style="font-size:19px;font-weight:700;color:#1B4F72;margin-bottom:8px">📱 홈 화면에 추가하면 앱처럼 사용할 수 있어요</div>
+  <div style="font-size:16px;color:#5A6A7A" id="installGuide"></div>
+  <button onclick="dismissInstall()" style="margin-top:10px;padding:10px 24px;background:none;border:2px solid #5B9BD5;border-radius:10px;font-size:16px;font-weight:600;color:#1B4F72;cursor:pointer;font-family:'Noto Sans KR',sans-serif">알겠습니다</button>
+</div>
+
+<div class="content" id="pageCheck">
+  <div id="checkList"></div>
+  <div id="allDone" style="display:none;text-align:center;padding:40px 20px">
+    <div style="font-size:72px;margin-bottom:12px">🎉</div>
+    <h3 style="font-size:26px;font-weight:800;color:#27AE60;margin-bottom:8px">오늘 약을 모두 드셨습니다!</h3>
+    <p style="font-size:20px;color:#5A6A7A">건강한 하루 되세요</p>
+  </div>
+</div>
+<div class="content" id="pageHistory" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <button onclick="changeMonth(-1)" style="width:48px;height:48px;border:2px solid #C8D6E0;border-radius:12px;background:#fff;font-size:22px;cursor:pointer">◀</button>
+    <div id="calTitle" style="font-size:22px;font-weight:800;color:#1B4F72"></div>
+    <button onclick="changeMonth(1)" style="width:48px;height:48px;border:2px solid #C8D6E0;border-radius:12px;background:#fff;font-size:22px;cursor:pointer">▶</button>
+  </div>
+  <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center"></div>
+  <div id="dayDetail" style="margin-top:20px"></div>
+</div>
+<div class="content" id="pageStats" style="display:none">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+    <div style="font-size:22px;font-weight:800;color:#1B4F72;margin-bottom:16px">📊 최근 7일 복용률</div>
+    <div id="weekChart" style="display:flex;align-items:flex-end;gap:6px;height:160px;padding-top:10px"></div>
+  </div>
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+    <div style="font-size:22px;font-weight:800;color:#1B4F72;margin-bottom:16px">📈 이번 달 복용률</div>
+    <div style="text-align:center">
+      <div id="monthRate" style="font-size:56px;font-weight:800;color:#27AE60">0%</div>
+      <div id="monthDesc" style="font-size:18px;color:#5A6A7A;margin-top:4px"></div>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+    <div style="font-size:22px;font-weight:800;color:#1B4F72;margin-bottom:16px">💊 약별 복용률 (최근 7일)</div>
+    <div id="medStats"></div>
+  </div>
+</div>
+<div class="content" id="pageManage" style="display:none">
+  <div id="medList"></div>
+  <!-- 긴급 연락처 -->
+  <div style="margin-top:20px;background:#fff;border-radius:16px;padding:22px 24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:7px solid #E74C3C">
+    <div style="font-size:22px;font-weight:800;color:#E74C3C;margin-bottom:14px">🆘 긴급 연락처</div>
+    <div id="contactList"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input type="text" id="contactName" placeholder="이름 (예: 아들)" style="flex:1;padding:14px 12px;font-size:18px;border:2px solid #C8D6E0;border-radius:12px;font-family:'Noto Sans KR',sans-serif">
+      <input type="tel" id="contactPhone" placeholder="전화번호" style="flex:1.2;padding:14px 12px;font-size:18px;border:2px solid #C8D6E0;border-radius:12px;font-family:'Noto Sans KR',sans-serif">
+    </div>
+    <button onclick="addContact()" style="width:100%;margin-top:10px;padding:14px 0;background:#E74C3C;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">+ 연락처 추가</button>
+  </div>
+  <!-- 데이터 백업/복원 -->
+  <div style="margin-top:20px;background:#fff;border-radius:16px;padding:22px 24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:7px solid #8E44AD">
+    <div style="font-size:22px;font-weight:800;color:#8E44AD;margin-bottom:14px">💾 데이터 백업/복원</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="exportData()" style="flex:1;padding:14px 0;background:#8E44AD;color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">📥 백업 저장</button>
+      <label style="flex:1;padding:14px 0;background:#EAF2F8;color:#1B4F72;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center">
+        📤 복원하기
+        <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+      </label>
+    </div>
+    <div style="margin-top:10px;font-size:15px;color:#7B8D9E;text-align:center">백업 파일을 다른 기기에서 복원할 수 있습니다</div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="add-btn" onclick="openForm()">＋ 새 약 추가하기</button>
+</div>
+
+<!-- ===== 약 추가/수정 폼 ===== -->
+<div class="form-screen" id="formScreen">
+  <div class="form-header">
+    <button class="back-btn" onclick="closeForm()">←</button>
+    <h2 id="formTitle">새 약 추가</h2>
+  </div>
+  <div class="form-body">
+    <div class="field">
+      <label>💊 약 이름</label>
+      <input type="text" id="inputName" placeholder="예: 혈압약, 당뇨약">
+    </div>
+    <div class="field">
+      <label>⏰ 복용 시간</label>
+      <div style="background:#1a1a2e;border-radius:16px;padding:20px;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <!-- 시간 -->
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <button type="button" onclick="adjustTime('hour',1)" style="width:64px;height:40px;background:none;border:none;color:#7FB3E0;font-size:28px;cursor:pointer">▲</button>
+            <div id="dispHour" style="font-size:52px;font-weight:800;color:#fff;font-family:monospace;width:76px;line-height:1">08</div>
+            <button type="button" onclick="adjustTime('hour',-1)" style="width:64px;height:40px;background:none;border:none;color:#7FB3E0;font-size:28px;cursor:pointer">▼</button>
+          </div>
+          <div style="font-size:48px;font-weight:800;color:#fff;padding:0 2px">:</div>
+          <!-- 분 -->
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <button type="button" onclick="adjustTime('min',1)" style="width:64px;height:40px;background:none;border:none;color:#7FB3E0;font-size:28px;cursor:pointer">▲</button>
+            <div id="dispMin" style="font-size:52px;font-weight:800;color:#fff;font-family:monospace;width:76px;line-height:1">00</div>
+            <button type="button" onclick="adjustTime('min',-1)" style="width:64px;height:40px;background:none;border:none;color:#7FB3E0;font-size:28px;cursor:pointer">▼</button>
+          </div>
+          <!-- 오전/오후 -->
+          <div style="display:flex;flex-direction:column;gap:6px;margin-left:10px">
+            <button type="button" id="btnAM" onclick="setAmpm('오전')" style="padding:10px 16px;border-radius:10px;border:2px solid #5B9BD5;background:#5B9BD5;color:#fff;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">오전</button>
+            <button type="button" id="btnPM" onclick="setAmpm('오후')" style="padding:10px 16px;border-radius:10px;border:2px solid #3D3D5C;background:none;color:#7B8D9E;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">오후</button>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="inputAmpm" value="오전">
+      <input type="hidden" id="inputHour" value="8">
+      <input type="hidden" id="inputMinute" value="0">
+    </div>
+    <div class="field">
+      <label>💊 복용량</label>
+      <select id="inputDose">
+        <option value="1알">1알</option>
+        <option value="2알">2알</option>
+        <option value="3알">3알</option>
+        <option value="반 알">반 알</option>
+        <option value="1포">1포</option>
+        <option value="2포">2포</option>
+        <option value="1숟가락">1숟가락</option>
+        <option value="2숟가락">2숟가락</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>📦 남은 약 수량 (선택)</label>
+      <input type="number" id="inputStock" placeholder="예: 30" min="0" style="width:100%">
+    </div>
+    <div class="field">
+      <label>📝 메모 (선택)</label>
+      <textarea id="inputMemo" placeholder="예: 식후 30분, 물과 함께"></textarea>
+    </div>
+    <div class="field">
+      <label>📅 복용 요일</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="day-sel" onclick="toggleDay(0)" id="day0" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:#C0392B">일</button>
+        <button type="button" class="day-sel" onclick="toggleDay(1)" id="day1" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">월</button>
+        <button type="button" class="day-sel" onclick="toggleDay(2)" id="day2" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">화</button>
+        <button type="button" class="day-sel" onclick="toggleDay(3)" id="day3" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">수</button>
+        <button type="button" class="day-sel" onclick="toggleDay(4)" id="day4" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">목</button>
+        <button type="button" class="day-sel" onclick="toggleDay(5)" id="day5" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">금</button>
+        <button type="button" class="day-sel" onclick="toggleDay(6)" id="day6" style="width:46px;height:46px;border-radius:12px;border:2px solid #C8D6E0;background:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:#2E86C1">토</button>
+      </div>
+      <button type="button" onclick="selectAllDays()" style="margin-top:8px;padding:10px 20px;background:#EAF2F8;color:#1B4F72;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">매일 선택</button>
+    </div>
+    <button class="save-btn" onclick="saveMed()">저장하기</button>
+  </div>
+</div>
+
+<!-- ===== 삭제 확인 팝업 ===== -->
+<div class="overlay" id="deleteOverlay">
+  <div class="dialog">
+    <div class="dialog-icon">⚠️</div>
+    <h3>약을 삭제하시겠습니까?</h3>
+    <p id="deleteMsg">이 약 정보가 삭제됩니다.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="cancelDelete()">취소</button>
+      <button class="dialog-confirm" onclick="confirmDelete()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 공유 팝업 ===== -->
+<div class="overlay" id="shareOverlay">
+  <div class="dialog" style="text-align:left;max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:22px;margin:0">📤 보호자에게 공유</h3>
+      <button onclick="closeSharePopup()" style="width:36px;height:36px;border:none;background:#EBF0F5;border-radius:10px;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <textarea id="shareText" readonly style="width:100%;height:200px;padding:14px;font-size:16px;border:2px solid #C8D6E0;border-radius:12px;resize:none;font-family:'Noto Sans KR',sans-serif;background:#F8F9FA;color:#1a1a2e;line-height:1.6"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="copyShareText()" style="flex:1;padding:16px 0;background:#1B4F72;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">📋 복사하기</button>
+      <button onclick="nativeShare()" id="nativeShareBtn" style="flex:1;padding:16px 0;background:#27AE60;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">📱 공유하기</button>
+    </div>
+    <button onclick="generateGuardianAlert()" style="width:100%;padding:14px 0;margin-top:10px;background:#E74C3C;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">🚨 미복용 알림 문구 생성</button>
+    <div style="margin-top:12px;font-size:15px;color:#7B8D9E;text-align:center">복사 후 카카오톡, 문자 등에 붙여넣기 하세요</div>
+  </div>
+</div>
+
+<!-- ===== 토스트 알림 ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── 데이터 저장소 ───
+  let medications = [];
+  let todayChecks = {};
+  let history = {};  // { '2026-3-3': { medId: true, ... }, ... }
+  let contacts = [];  // [{name, phone}]
+  let editingId = null;
+  let deletingId = null;
+  let currentTab = 'check';
+  let calYear, calMonth;
+
+  function getTodayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  }
+
+  function loadData() {
+    try {
+      var raw = window.name;
+      if (raw && raw.startsWith('{')) {
+        var parsed = JSON.parse(raw);
+        medications = parsed.medications || [];
+        history = parsed.history || {};
+        contacts = parsed.contacts || [];
+        if (parsed.checksDate === getTodayKey()) {
+          todayChecks = parsed.checks || {};
+        } else {
+          // 어제 기록을 history에 저장
+          if (parsed.checksDate && parsed.checks) {
+            history[parsed.checksDate] = parsed.checks;
+          }
+          todayChecks = {};
+        }
+      } else if (raw && raw.startsWith('[')) {
+        medications = JSON.parse(raw);
+        todayChecks = {};
+        history = {};
+      }
+    } catch(e) {
+      medications = [];
+      todayChecks = {};
+      history = {};
+    }
+  }
+
+  function saveData() {
+    try {
+      // 오늘 기록도 history에 반영
+      history[getTodayKey()] = todayChecks;
+      window.name = JSON.stringify({
+        medications: medications,
+        checks: todayChecks,
+        checksDate: getTodayKey(),
+        history: history,
+        contacts: contacts
+      });
+    } catch(e) {}
+  }
+
+  // ─── 오늘 날짜 표시 ───
+  function showDate() {
+    const now = new Date();
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const str = now.getFullYear() + '년 ' +
+                (now.getMonth() + 1) + '월 ' +
+                now.getDate() + '일 ' +
+                days[now.getDay()] + '요일';
+    document.getElementById('todayDate').textContent = str;
+  }
+
+  // ─── 진행률 ───
+  function updateProgress() {
+    var total = 0;
+    var done = 0;
+    for (var i = 0; i < medications.length; i++) {
+      if (!isMedActiveToday(medications[i])) continue;
+      total++;
+      if (todayChecks[medications[i].id]) done++;
+    }
+    var pct = total > 0 ? Math.round((done/total)*100) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = '오늘 복용: ' + done + ' / ' + total;
+    document.getElementById('allDone').style.display = (total > 0 && done === total) ? 'block' : 'none';
+  }
+
+  // ─── 탭 전환 ───
+  function switchTab(tab) {
+    currentTab = tab;
+    var map = {check:'tabCheck', history:'tabHistory', stats:'tabStats', manage:'tabManage'};
+    var pgMap = {check:'pageCheck', history:'pageHistory', stats:'pageStats', manage:'pageManage'};
+    for (var key in map) {
+      var el = document.getElementById(map[key]);
+      var pg = document.getElementById(pgMap[key]);
+      if (key === tab) {
+        el.style.color = '#1B4F72';
+        el.style.background = '#EAF2F8';
+        el.style.borderBottom = '3px solid #1B4F72';
+        pg.style.display = 'block';
+      } else {
+        el.style.color = '#7B8D9E';
+        el.style.background = 'none';
+        el.style.borderBottom = '3px solid transparent';
+        pg.style.display = 'none';
+      }
+    }
+    document.querySelector('.bottom-bar').style.display = (tab === 'manage') ? 'block' : 'none';
+    if (tab === 'history') renderCalendar();
+    if (tab === 'stats') renderStats();
+  }
+
+  // ─── 체크 토글 ───
+  function toggleCheck(id) {
+    if (todayChecks[id]) {
+      todayChecks[id] = false;
+      // 재고 복원
+      for (var i = 0; i < medications.length; i++) {
+        if (medications[i].id === id && medications[i].stock !== null) {
+          medications[i].stock++;
+          break;
+        }
+      }
+      showToast('복용 취소');
+    } else {
+      todayChecks[id] = true;
+      // 재고 차감
+      for (var i = 0; i < medications.length; i++) {
+        if (medications[i].id === id && medications[i].stock !== null) {
+          medications[i].stock--;
+          if (medications[i].stock <= 5 && medications[i].stock >= 0) {
+            showToast('⚠️ ' + medications[i].name + ' 남은 수량: ' + medications[i].stock + '개');
+          } else {
+            showToast('복용 완료! 👍');
+          }
+          break;
+        }
+      }
+      if (!medications.find(function(m) { return m.id === id && m.stock !== null; })) {
+        showToast('복용 완료! 👍');
+      }
+    }
+    saveData();
+    renderCheckList();
+    scheduleNotifications();
+  }
+
+  // ─── 오늘 복용 탭 그리기 ───
+  function renderCheckList() {
+    var container = document.getElementById('checkList');
+    if (medications.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">💊</div><p>등록된 약이 없습니다</p><div class="hint">"📋 관리" 탭에서 약을 추가해주세요</div></div>';
+      updateProgress();
+      return;
+    }
+    var sorted = sortMeds(medications);
+    var html = '';
+    var activeCount = 0;
+    for (var i = 0; i < sorted.length; i++) {
+      var m = sorted[i];
+      if (!isMedActiveToday(m)) continue;
+      activeCount++;
+      var taken = todayChecks[m.id] === true;
+      var memo = '';
+      if (m.memo && m.memo.trim() !== '') {
+        memo = '<div class="med-memo">📝 ' + escapeHtml(m.memo) + '</div>';
+      }
+      html += '<div class="med-card' + (taken?' taken':'') + '">' +
+        '<div class="med-card-body">' +
+          '<div class="med-name"' + (taken?' style="color:#27AE60"':'') + '>' + escapeHtml(m.name) + '</div>' +
+          '<div class="med-detail"><span>⏰</span> ' + escapeHtml(m.ampm) + ' ' + escapeHtml(m.hour) + ':' + padMin(m.minute) + ' · ' + escapeHtml(m.dose) + '</div>' +
+          (m.stock !== null && m.stock !== undefined ? '<div class="med-detail"><span>📦 남은 수량:</span> ' + m.stock + '개' + (m.stock <= 5 ? ' <span style="color:#E74C3C;font-weight:700">⚠️ 부족</span>' : '') + '</div>' : '') +
+          memo +
+          (taken ? '<div style="font-size:17px;font-weight:700;color:#27AE60;margin-top:8px">✅ 복용 완료</div>' : '') +
+        '</div>' +
+        '<button class="check-btn' + (taken?' checked':'') + '" onclick="toggleCheck(\'' + m.id + '\')">' + (taken?'✔':'') + '</button>' +
+      '</div>';
+    }
+    if (activeCount === 0 && medications.length > 0) {
+      html = '<div class="empty-state"><div class="icon">😊</div><p>오늘은 복용할 약이 없습니다</p><div class="hint">등록된 약이 오늘 요일에 해당하지 않아요</div></div>';
+    }
+    container.innerHTML = html;
+    updateProgress();
+  }
+
+  // ─── 시간순 정렬 ───
+  function sortMeds(arr) {
+    return arr.slice().sort(function(a,b) {
+      var av = ((a.ampm==='오전'?0:100)+parseInt(a.hour))*60 + parseInt(a.minute||0);
+      var bv = ((b.ampm==='오전'?0:100)+parseInt(b.hour))*60 + parseInt(b.minute||0);
+      return av - bv;
+    });
+  }
+
+  // ─── 약 관리 탭 그리기 ───
+  function renderList() {
+    var container = document.getElementById('medList');
+
+    if (medications.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="icon">💊</div>' +
+          '<p>등록된 약이 없습니다</p>' +
+          '<div class="hint">아래 버튼을 눌러 약을 추가하세요</div>' +
+        '</div>';
+      return;
+    }
+
+    // 시간순 정렬
+    const sorted = sortMeds(medications);
+
+    let html = '';
+    for (let i = 0; i < sorted.length; i++) {
+      const m = sorted[i];
+      let memoHtml = '';
+      if (m.memo && m.memo.trim() !== '') {
+        memoHtml = '<div class="med-memo">📝 ' + escapeHtml(m.memo) + '</div>';
+      }
+      html +=
+        '<div class="med-card">' +
+          '<div class="med-name">' + escapeHtml(m.name) + '</div>' +
+          '<div class="med-detail"><span>⏰ 복용 시간:</span> ' + escapeHtml(m.ampm) + ' ' + escapeHtml(m.hour) + ':' + padMin(m.minute) + '</div>' +
+          '<div class="med-detail"><span>📅 복용 요일:</span> ' + formatDays(m.days) + '</div>' +
+          '<div class="med-detail"><span>💊 복용량:</span> ' + escapeHtml(m.dose) + '</div>' +
+          (m.stock !== null && m.stock !== undefined ? '<div class="med-detail"><span>📦 재고:</span> ' + m.stock + '개' + (m.stock <= 5 ? ' <span style="color:#E74C3C;font-weight:700">⚠️ 부족!</span>' : '') + '</div>' : '') +
+          memoHtml +
+          '<div class="card-buttons">' +
+            '<button class="btn-edit" onclick="openEdit(\'' + m.id + '\')">✏️ 수정</button>' +
+            '<button class="btn-delete" onclick="openDelete(\'' + m.id + '\')">🗑️ 삭제</button>' +
+          '</div>' +
+        '</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  function padMin(m) {
+    var v = parseInt(m) || 0;
+    return v < 10 ? '0' + v : '' + v;
+  }
+
+  // ─── HTML 이스케이프 ───
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ─── 고유 ID 생성 ───
+  function makeId() {
+    return 'med_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  }
+
+  // ─── 폼 열기 (새 약 추가) ───
+  function openForm() {
+    editingId = null;
+    document.getElementById('formTitle').textContent = '새 약 추가';
+    document.getElementById('inputName').value = '';
+    resetPicker();
+    document.getElementById('inputDose').value = '1알';
+    document.getElementById('inputMemo').value = '';
+    document.getElementById('inputStock').value = '';
+    selectedDays = [0,1,2,3,4,5,6];
+    updateDayButtons();
+    document.getElementById('formScreen').classList.add('show');
+  }
+
+  // ─── 폼 열기 (수정) ───
+  function openEdit(id) {
+    const med = medications.find(function(m) { return m.id === id; });
+    if (!med) return;
+
+    editingId = id;
+    document.getElementById('formTitle').textContent = '약 수정';
+    document.getElementById('inputName').value = med.name;
+    setPickerFromMed(med);
+    document.getElementById('inputDose').value = med.dose;
+    document.getElementById('inputMemo').value = med.memo || '';
+    document.getElementById('inputStock').value = med.stock || '';
+    selectedDays = med.days ? med.days.slice() : [0,1,2,3,4,5,6];
+    updateDayButtons();
+    document.getElementById('formScreen').classList.add('show');
+  }
+
+  // ─── 폼 닫기 ───
+  function closeForm() {
+    document.getElementById('formScreen').classList.remove('show');
+    editingId = null;
+  }
+
+  // ─── 저장 ───
+  function saveMed() {
+    const name = document.getElementById('inputName').value.trim();
+    const ampm = document.getElementById('inputAmpm').value;
+    const hour = document.getElementById('inputHour').value;
+    const minute = document.getElementById('inputMinute').value;
+    const dose = document.getElementById('inputDose').value;
+    const memo = document.getElementById('inputMemo').value.trim();
+    const stockVal = document.getElementById('inputStock').value.trim();
+    const stock = stockVal ? parseInt(stockVal) : null;
+
+    if (name === '') {
+      showToast('약 이름을 입력해주세요');
+      document.getElementById('inputName').focus();
+      return;
+    }
+
+    if (editingId) {
+      // 수정
+      for (let i = 0; i < medications.length; i++) {
+        if (medications[i].id === editingId) {
+          medications[i].name = name;
+          medications[i].ampm = ampm;
+          medications[i].hour = hour;
+          medications[i].minute = minute;
+          medications[i].dose = dose;
+          medications[i].memo = memo;
+          medications[i].days = selectedDays.slice();
+          medications[i].stock = stock;
+          break;
+        }
+      }
+      showToast('약 정보가 수정되었습니다');
+    } else {
+      // 새로 추가
+      medications.push({
+        id: makeId(),
+        name: name,
+        ampm: ampm,
+        hour: hour,
+        minute: minute,
+        dose: dose,
+        memo: memo,
+        days: selectedDays.slice(),
+        stock: stock
+      });
+      showToast('새 약이 추가되었습니다');
+    }
+
+    saveData();
+    renderList();
+    renderCheckList();
+    closeForm();
+    scheduleNotifications();
+  }
+
+  // ─── 삭제 팝업 열기 ───
+  function openDelete(id) {
+    const med = medications.find(function(m) { return m.id === id; });
+    if (!med) return;
+
+    deletingId = id;
+    document.getElementById('deleteMsg').textContent =
+      '"' + med.name + '" 약 정보가 삭제됩니다.';
+    document.getElementById('deleteOverlay').classList.add('show');
+  }
+
+  // ─── 삭제 취소 ───
+  function cancelDelete() {
+    deletingId = null;
+    document.getElementById('deleteOverlay').classList.remove('show');
+  }
+
+  // ─── 삭제 확인 ───
+  function confirmDelete() {
+    if (!deletingId) return;
+
+    medications = medications.filter(function(m) { return m.id !== deletingId; });
+    deletingId = null;
+
+    document.getElementById('deleteOverlay').classList.remove('show');
+    saveData();
+    renderList();
+    renderCheckList();
+    showToast('약이 삭제되었습니다');
+    scheduleNotifications();
+  }
+
+  // ─── 토스트 알림 ───
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function() {
+      el.classList.remove('show');
+    }, 2000);
+  }
+
+  // ─── 통계 ───
+  function getDateKey(d) {
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  }
+
+  function getDayRate(key) {
+    var rec = history[key] || (key === getTodayKey() ? todayChecks : null);
+    if (!rec || medications.length === 0) return -1;
+    var done = 0;
+    for (var j = 0; j < medications.length; j++) {
+      if (rec[medications[j].id]) done++;
+    }
+    return Math.round((done / medications.length) * 100);
+  }
+
+  function renderStats() {
+    if (medications.length === 0) {
+      document.getElementById('weekChart').innerHTML = '<div style="width:100%;text-align:center;color:#7B8D9E;font-size:18px;align-self:center">약을 먼저 등록해주세요</div>';
+      document.getElementById('monthRate').textContent = '-';
+      document.getElementById('monthDesc').textContent = '';
+      document.getElementById('medStats').innerHTML = '';
+      return;
+    }
+    renderWeekChart();
+    renderMonthRate();
+    renderMedStats();
+  }
+
+  function renderWeekChart() {
+    var html = '';
+    var days = ['일','월','화','수','목','금','토'];
+    var today = new Date();
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(today);
+      d.setDate(d.getDate() - i);
+      var key = getDateKey(d);
+      var rate = getDayRate(key);
+      var h = rate >= 0 ? Math.max(rate * 1.4, 8) : 8;
+      var color = rate < 0 ? '#E8E8E8' : (rate === 100 ? '#27AE60' : (rate >= 50 ? '#F1C40F' : '#E74C3C'));
+      var label = rate >= 0 ? rate + '%' : '-';
+      var dayName = days[d.getDay()];
+      var isToday = (i === 0);
+      var border = isToday ? 'border:2px solid #1B4F72;border-radius:8px;' : '';
+
+      html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;' + border + 'padding:4px 0">' +
+        '<div style="font-size:13px;font-weight:600;color:#5A6A7A">' + label + '</div>' +
+        '<div style="width:100%;max-width:36px;height:' + h + 'px;background:' + color + ';border-radius:6px"></div>' +
+        '<div style="font-size:14px;font-weight:' + (isToday?'800':'600') + ';color:' + (isToday?'#1B4F72':'#7B8D9E') + '">' + dayName + '</div>' +
+        '<div style="font-size:12px;color:#9AAFC0">' + (d.getMonth()+1) + '/' + d.getDate() + '</div>' +
+      '</div>';
+    }
+    document.getElementById('weekChart').innerHTML = html;
+  }
+
+  function renderMonthRate() {
+    var now = new Date();
+    var totalDays = 0;
+    var totalRate = 0;
+    for (var day = 1; day <= now.getDate(); day++) {
+      var key = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + day;
+      var rate = getDayRate(key);
+      if (rate >= 0) {
+        totalDays++;
+        totalRate += rate;
+      }
+    }
+    var avg = totalDays > 0 ? Math.round(totalRate / totalDays) : 0;
+    var el = document.getElementById('monthRate');
+    el.textContent = avg + '%';
+    el.style.color = avg >= 80 ? '#27AE60' : (avg >= 50 ? '#F39C12' : '#E74C3C');
+
+    var msg = '';
+    if (avg >= 90) msg = '🎉 훌륭합니다! 꾸준히 잘 드시고 계세요';
+    else if (avg >= 70) msg = '👍 잘 하고 계세요! 조금만 더 신경쓰면 완벽해요';
+    else if (avg >= 50) msg = '💪 약 드시는 걸 잊지 않도록 알림을 켜보세요';
+    else if (totalDays > 0) msg = '⚠️ 복용률이 낮아요. 건강을 위해 잊지 말고 드세요';
+    else msg = '아직 기록이 없습니다';
+    document.getElementById('monthDesc').textContent = msg;
+  }
+
+  function renderMedStats() {
+    var html = '';
+    var today = new Date();
+    for (var i = 0; i < medications.length; i++) {
+      var m = medications[i];
+      var taken = 0;
+      var total = 0;
+      for (var d = 0; d < 7; d++) {
+        var dt = new Date(today);
+        dt.setDate(dt.getDate() - d);
+        var key = getDateKey(dt);
+        var rec = history[key] || (key === getTodayKey() ? todayChecks : null);
+        if (rec) {
+          total++;
+          if (rec[m.id]) taken++;
+        }
+      }
+      var pct = total > 0 ? Math.round((taken/total)*100) : 0;
+      var color = pct >= 80 ? '#27AE60' : (pct >= 50 ? '#F39C12' : '#E74C3C');
+      html += '<div style="margin-bottom:14px">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+          '<span style="font-size:19px;font-weight:700">' + escapeHtml(m.name) + '</span>' +
+          '<span style="font-size:18px;font-weight:700;color:' + color + '">' + pct + '% (' + taken + '/' + total + ')</span>' +
+        '</div>' +
+        '<div style="background:#EBF0F5;border-radius:8px;height:12px;overflow:hidden">' +
+          '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:8px;transition:width 0.4s"></div>' +
+        '</div>' +
+      '</div>';
+    }
+    document.getElementById('medStats').innerHTML = html;
+  }
+
+  // ─── 달력 ───
+  function initCalendar() {
+    var now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+  }
+
+  function changeMonth(dir) {
+    calMonth += dir;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    document.getElementById('calTitle').textContent = calYear + '년 ' + (calMonth+1) + '월';
+    var grid = document.getElementById('calGrid');
+    var dayNames = ['일','월','화','수','목','금','토'];
+    var html = '';
+    for (var d = 0; d < 7; d++) {
+      var color = d === 0 ? '#C0392B' : (d === 6 ? '#2E86C1' : '#5A6A7A');
+      html += '<div style="padding:8px 0;font-size:15px;font-weight:700;color:' + color + '">' + dayNames[d] + '</div>';
+    }
+    var first = new Date(calYear, calMonth, 1).getDay();
+    var lastDate = new Date(calYear, calMonth+1, 0).getDate();
+    for (var i = 0; i < first; i++) {
+      html += '<div></div>';
+    }
+    var today = new Date();
+    for (var day = 1; day <= lastDate; day++) {
+      var key = calYear + '-' + (calMonth+1) + '-' + day;
+      var rec = history[key] || (key === getTodayKey() ? todayChecks : null);
+      var bg = '#fff'; var border = '2px solid #E8E8E8'; var txtColor = '#1a1a2e';
+      var isToday = (calYear === today.getFullYear() && calMonth === today.getMonth() && day === today.getDate());
+
+      if (rec && medications.length > 0) {
+        var total = medications.length;
+        var done = 0;
+        for (var j = 0; j < medications.length; j++) {
+          if (rec[medications[j].id]) done++;
+        }
+        if (done === total) {
+          bg = '#27AE60'; txtColor = '#fff'; border = '2px solid #27AE60';
+        } else if (done > 0) {
+          bg = '#F9E79F'; border = '2px solid #F1C40F';
+        }
+      }
+      if (isToday) {
+        border = '3px solid #1B4F72';
+      }
+
+      html += '<div onclick="showDayDetail(\'' + key + '\')" style="padding:10px 0;font-size:18px;font-weight:700;background:' + bg + ';color:' + txtColor + ';border:' + border + ';border-radius:10px;cursor:pointer">' + day + '</div>';
+    }
+    grid.innerHTML = html;
+    document.getElementById('dayDetail').innerHTML = '';
+  }
+
+  function showDayDetail(key) {
+    var rec = history[key] || (key === getTodayKey() ? todayChecks : null);
+    var container = document.getElementById('dayDetail');
+    var parts = key.split('-');
+    var title = parts[0] + '년 ' + parts[1] + '월 ' + parts[2] + '일';
+
+    if (!rec || medications.length === 0) {
+      container.innerHTML = '<div style="padding:20px;background:#fff;border-radius:14px;text-align:center"><div style="font-size:20px;font-weight:700;color:#1B4F72;margin-bottom:8px">' + title + '</div><div style="font-size:18px;color:#7B8D9E">기록이 없습니다</div></div>';
+      return;
+    }
+
+    var html = '<div style="padding:20px;background:#fff;border-radius:14px"><div style="font-size:20px;font-weight:700;color:#1B4F72;margin-bottom:14px">' + title + '</div>';
+    for (var i = 0; i < medications.length; i++) {
+      var m = medications[i];
+      var taken = rec[m.id] === true;
+      var icon = taken ? '✅' : '❌';
+      var color = taken ? '#27AE60' : '#C0392B';
+      var label = taken ? '복용 완료' : '미복용';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #EBF0F5"><div style="font-size:19px;font-weight:600">' + icon + ' ' + escapeHtml(m.name) + '</div><div style="font-size:17px;font-weight:600;color:' + color + '">' + label + '</div></div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // ─── 디지털 시계 피커 ───
+  var pickerHour = 8;
+  var pickerMin = 0;
+  var pickerAmpm = '오전';
+
+  function adjustTime(type, dir) {
+    if (type === 'hour') {
+      pickerHour += dir;
+      if (pickerHour > 12) pickerHour = 1;
+      if (pickerHour < 1) pickerHour = 12;
+    } else {
+      pickerMin += dir * 5;
+      if (pickerMin >= 60) pickerMin = 0;
+      if (pickerMin < 0) pickerMin = 55;
+    }
+    updateClockDisplay();
+  }
+
+  function setAmpm(val) {
+    pickerAmpm = val;
+    updateClockDisplay();
+  }
+
+  function updateClockDisplay() {
+    document.getElementById('dispHour').textContent = pickerHour < 10 ? '0' + pickerHour : '' + pickerHour;
+    document.getElementById('dispMin').textContent = pickerMin < 10 ? '0' + pickerMin : '' + pickerMin;
+    document.getElementById('inputAmpm').value = pickerAmpm;
+    document.getElementById('inputHour').value = '' + pickerHour;
+    document.getElementById('inputMinute').value = '' + pickerMin;
+    if (pickerAmpm === '오전') {
+      document.getElementById('btnAM').style.background = '#5B9BD5';
+      document.getElementById('btnAM').style.borderColor = '#5B9BD5';
+      document.getElementById('btnAM').style.color = '#fff';
+      document.getElementById('btnPM').style.background = 'none';
+      document.getElementById('btnPM').style.borderColor = '#3D3D5C';
+      document.getElementById('btnPM').style.color = '#7B8D9E';
+    } else {
+      document.getElementById('btnPM').style.background = '#5B9BD5';
+      document.getElementById('btnPM').style.borderColor = '#5B9BD5';
+      document.getElementById('btnPM').style.color = '#fff';
+      document.getElementById('btnAM').style.background = 'none';
+      document.getElementById('btnAM').style.borderColor = '#3D3D5C';
+      document.getElementById('btnAM').style.color = '#7B8D9E';
+    }
+  }
+
+  function setPickerFromMed(med) {
+    pickerHour = parseInt(med.hour) || 8;
+    pickerMin = parseInt(med.minute) || 0;
+    pickerAmpm = med.ampm || '오전';
+    updateClockDisplay();
+  }
+
+  function resetPicker() {
+    pickerHour = 8;
+    pickerMin = 0;
+    pickerAmpm = '오전';
+    updateClockDisplay();
+  }
+
+  // ─── 요일 선택 ───
+  var selectedDays = [0,1,2,3,4,5,6];
+
+  function formatDays(days) {
+    if (!days || days.length === 7) return '매일';
+    var names = ['일','월','화','수','목','금','토'];
+    var sorted = days.slice().sort();
+    var result = [];
+    for (var i = 0; i < sorted.length; i++) result.push(names[sorted[i]]);
+    return result.join(', ');
+  } // 기본: 매일
+
+  function toggleDay(d) {
+    var idx = selectedDays.indexOf(d);
+    if (idx >= 0) selectedDays.splice(idx,1);
+    else selectedDays.push(d);
+    updateDayButtons();
+  }
+
+  function selectAllDays() {
+    selectedDays = [0,1,2,3,4,5,6];
+    updateDayButtons();
+  }
+
+  function updateDayButtons() {
+    for (var i = 0; i < 7; i++) {
+      var btn = document.getElementById('day' + i);
+      if (selectedDays.indexOf(i) >= 0) {
+        btn.style.background = '#1B4F72';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#1B4F72';
+      } else {
+        btn.style.background = '#fff';
+        btn.style.color = (i === 0 ? '#C0392B' : (i === 6 ? '#2E86C1' : '#1a1a2e'));
+        btn.style.borderColor = '#C8D6E0';
+      }
+    }
+  }
+
+  function isMedActiveToday(med) {
+    var dayOfWeek = new Date().getDay();
+    var medDays = med.days || [0,1,2,3,4,5,6];
+    return medDays.indexOf(dayOfWeek) >= 0;
+  }
+
+  // ─── 긴급 연락처 ───
+  function renderContacts() {
+    var el = document.getElementById('contactList');
+    if (contacts.length === 0) {
+      el.innerHTML = '<div style="padding:10px 0;color:#7B8D9E;font-size:17px">등록된 연락처가 없습니다</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < contacts.length; i++) {
+      var c = contacts[i];
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #EBF0F5">' +
+        '<div style="flex:1"><div style="font-size:19px;font-weight:700">' + escapeHtml(c.name) + '</div><div style="font-size:17px;color:#5A6A7A">' + escapeHtml(c.phone) + '</div></div>' +
+        '<a href="tel:' + escapeHtml(c.phone) + '" style="width:52px;height:52px;background:#27AE60;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;text-decoration:none">📞</a>' +
+        '<button onclick="removeContact(' + i + ')" style="width:40px;height:40px;background:#FDEDEC;color:#C0392B;border:none;border-radius:10px;font-size:18px;cursor:pointer">✕</button>' +
+      '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function addContact() {
+    var name = document.getElementById('contactName').value.trim();
+    var phone = document.getElementById('contactPhone').value.trim();
+    if (!name) { showToast('이름을 입력해주세요'); return; }
+    if (!phone) { showToast('전화번호를 입력해주세요'); return; }
+    contacts.push({name: name, phone: phone});
+    document.getElementById('contactName').value = '';
+    document.getElementById('contactPhone').value = '';
+    saveData();
+    renderContacts();
+    showToast(name + ' 연락처가 추가되었습니다');
+  }
+
+  function removeContact(idx) {
+    var name = contacts[idx].name;
+    contacts.splice(idx, 1);
+    saveData();
+    renderContacts();
+    showToast(name + ' 연락처가 삭제되었습니다');
+  }
+
+  // ─── 데이터 백업/복원 ───
+  function exportData() {
+    var data = {
+      medications: medications,
+      history: history,
+      contacts: contacts,
+      exportDate: new Date().toISOString()
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var now = new Date();
+    a.download = '복약케어_백업_' + now.getFullYear() + (now.getMonth()+1) + now.getDate() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('백업 파일이 저장되었습니다');
+  }
+
+  function importData(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (!data.medications) { showToast('올바른 백업 파일이 아닙니다'); return; }
+        medications = data.medications;
+        history = data.history || {};
+        contacts = data.contacts || [];
+        todayChecks = {};
+        saveData();
+        renderAll();
+        showToast('데이터가 복원되었습니다! (' + medications.length + '개 약)');
+      } catch(err) {
+        showToast('파일 읽기 오류');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function renderAll() {
+    renderCheckList();
+    renderList();
+    renderContacts();
+  }
+
+  // ─── 글씨 크기 ───
+  var fontSizes = ['normal','large','small'];
+  var fontLabels = ['가','가+','가-'];
+  var currentFontIdx = 0;
+
+  function cycleFontSize() {
+    document.body.classList.remove('font-large','font-small');
+    currentFontIdx = (currentFontIdx + 1) % 3;
+    if (fontSizes[currentFontIdx] === 'large') document.body.classList.add('font-large');
+    if (fontSizes[currentFontIdx] === 'small') document.body.classList.add('font-small');
+    document.getElementById('fontBtn').textContent = fontLabels[currentFontIdx];
+    var msg = currentFontIdx === 0 ? '보통 크기' : (currentFontIdx === 1 ? '큰 글씨' : '작은 글씨');
+    showToast(msg);
+    try {
+      var data = JSON.parse(window.name || '{}');
+      data.fontIdx = currentFontIdx;
+      window.name = JSON.stringify(data);
+    } catch(e) {}
+  }
+
+  function loadFontSize() {
+    try {
+      var data = JSON.parse(window.name || '{}');
+      if (data.fontIdx !== undefined) {
+        currentFontIdx = data.fontIdx;
+        document.body.classList.remove('font-large','font-small');
+        if (fontSizes[currentFontIdx] === 'large') document.body.classList.add('font-large');
+        if (fontSizes[currentFontIdx] === 'small') document.body.classList.add('font-small');
+        document.getElementById('fontBtn').textContent = fontLabels[currentFontIdx];
+      }
+    } catch(e) {}
+  }
+
+  // ─── 공유 기능 ───
+  function buildShareText() {
+    var now = new Date();
+    var days = ['일','월','화','수','목','금','토'];
+    var dateStr = now.getFullYear() + '년 ' + (now.getMonth()+1) + '월 ' + now.getDate() + '일 ' + days[now.getDay()] + '요일';
+    var total = medications.length;
+    var done = 0;
+    for (var i = 0; i < total; i++) {
+      if (todayChecks[medications[i].id]) done++;
+    }
+
+    var text = '💊 복약케어 알림\n';
+    text += '📅 ' + dateStr + '\n\n';
+
+    if (total === 0) {
+      text += '등록된 약이 없습니다.\n';
+      return text;
+    }
+
+    text += '📊 오늘 복용 현황: ' + done + ' / ' + total + ' (' + Math.round((done/total)*100) + '%)\n\n';
+
+    var sorted = sortMeds(medications);
+    for (var i = 0; i < sorted.length; i++) {
+      var m = sorted[i];
+      var taken = todayChecks[m.id] === true;
+      var icon = taken ? '✅' : '❌';
+      text += icon + ' ' + m.name + ' (' + m.ampm + ' ' + m.hour + ':' + padMin(m.minute) + ', ' + m.dose + ')';
+      if (taken) text += ' - 복용완료';
+      else text += ' - 미복용';
+      text += '\n';
+    }
+
+    text += '\n';
+    if (done === total) {
+      text += '🎉 오늘 약을 모두 드셨습니다!';
+    } else if (done > 0) {
+      text += '⚠️ 아직 ' + (total - done) + '개 약을 드시지 않았습니다.';
+    } else {
+      text += '⚠️ 오늘 아직 약을 드시지 않았습니다.';
+    }
+    return text;
+  }
+
+  function openSharePopup() {
+    var text = buildShareText();
+    document.getElementById('shareText').value = text;
+    document.getElementById('shareOverlay').classList.add('show');
+    if (!navigator.share) {
+      document.getElementById('nativeShareBtn').style.display = 'none';
+    } else {
+      document.getElementById('nativeShareBtn').style.display = 'block';
+    }
+  }
+
+  function closeSharePopup() {
+    document.getElementById('shareOverlay').classList.remove('show');
+  }
+
+  function copyShareText() {
+    var text = document.getElementById('shareText').value;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('복사되었습니다! 붙여넣기 하세요');
+      });
+    } else {
+      var ta = document.getElementById('shareText');
+      ta.select();
+      document.execCommand('copy');
+      showToast('복사되었습니다! 붙여넣기 하세요');
+    }
+  }
+
+  function nativeShare() {
+    var text = document.getElementById('shareText').value;
+    if (navigator.share) {
+      navigator.share({
+        title: '복약케어 복용 현황',
+        text: text
+      }).then(function() {
+        closeSharePopup();
+        showToast('공유 완료!');
+      }).catch(function() {});
+    }
+  }
+
+  function generateGuardianAlert() {
+    var now = new Date();
+    var days = ['일','월','화','수','목','금','토'];
+    var dateStr = (now.getMonth()+1) + '월 ' + now.getDate() + '일 ' + days[now.getDay()] + '요일';
+    var timeStr = now.getHours() + '시 ' + now.getMinutes() + '분';
+
+    var missed = [];
+    var sorted = sortMeds(medications);
+    for (var i = 0; i < sorted.length; i++) {
+      if (!todayChecks[sorted[i].id]) {
+        missed.push(sorted[i]);
+      }
+    }
+
+    var text = '';
+    if (missed.length === 0) {
+      text = '🎉 [복약케어 알림]\n\n';
+      text += dateStr + ' ' + timeStr + ' 기준\n';
+      text += '오늘 약을 모두 복용했습니다!\n';
+      text += '걱정하지 않으셔도 됩니다. 😊';
+    } else {
+      text = '🚨 [복약케어 미복용 알림]\n\n';
+      text += '📅 ' + dateStr + ' ' + timeStr + ' 기준\n\n';
+      text += '⚠️ 아래 약을 아직 드시지 않았습니다:\n\n';
+      for (var i = 0; i < missed.length; i++) {
+        var m = missed[i];
+        text += '  ❌ ' + m.name + ' (' + m.ampm + ' ' + m.hour + ':' + padMin(m.minute) + ', ' + m.dose + ')\n';
+      }
+      text += '\n📞 확인 전화 부탁드립니다.\n';
+      text += '약 복용은 건강 관리의 기본입니다. 🙏';
+    }
+
+    document.getElementById('shareText').value = text;
+    showToast('미복용 알림 문구가 생성되었습니다');
+  }
+
+  // ─── 설치 안내 ───
+  function showInstallBanner() {
+    // 이미 standalone이면 표시 안 함
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (window.navigator.standalone === true) return;
+    // 이미 닫았으면 표시 안 함
+    try { if (window.name && JSON.parse(window.name).installDismissed) return; } catch(e) {}
+
+    var guide = document.getElementById('installGuide');
+    var ua = navigator.userAgent;
+    if (/iPhone|iPad/.test(ua)) {
+      guide.innerHTML = 'Safari 하단 <strong>공유 버튼(□↑)</strong> → <strong>"홈 화면에 추가"</strong>';
+    } else if (/Android/.test(ua)) {
+      guide.innerHTML = 'Chrome 메뉴(⋮) → <strong>"홈 화면에 추가"</strong>';
+    } else {
+      guide.innerHTML = '브라우저 주소창 오른쪽 <strong>설치 아이콘</strong>을 눌러주세요';
+    }
+    document.getElementById('installBanner').style.display = 'block';
+  }
+
+  function dismissInstall() {
+    document.getElementById('installBanner').style.display = 'none';
+    try {
+      var data = JSON.parse(window.name || '{}');
+      data.installDismissed = true;
+      window.name = JSON.stringify(data);
+    } catch(e) {}
+  }
+
+  // ─── 알림 관련 ───
+  var notiTimers = [];
+
+  function updateNotiBanner() {
+    var banner = document.getElementById('notiBanner');
+    var ok = document.getElementById('notiOk');
+    var denied = document.getElementById('notiDenied');
+    banner.style.display = 'none';
+    ok.style.display = 'none';
+    denied.style.display = 'none';
+
+    if (!('Notification' in window)) {
+      denied.textContent = '🔕 이 브라우저는 알림을 지원하지 않습니다';
+      denied.style.display = 'block';
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      ok.style.display = 'block';
+      scheduleNotifications();
+    } else if (Notification.permission === 'denied') {
+      denied.style.display = 'block';
+    } else {
+      banner.style.display = 'block';
+    }
+  }
+
+  function requestNotiPermission() {
+    if (!('Notification' in window)) return;
+    Notification.requestPermission().then(function(perm) {
+      updateNotiBanner();
+      if (perm === 'granted') {
+        showToast('알림이 허용되었습니다! 🔔');
+      }
+    });
+  }
+
+  function scheduleNotifications() {
+    // 기존 타이머 모두 해제
+    for (var i = 0; i < notiTimers.length; i++) {
+      clearTimeout(notiTimers[i]);
+    }
+    notiTimers = [];
+
+    if (Notification.permission !== 'granted') return;
+    if (medications.length === 0) return;
+
+    var now = new Date();
+    for (var i = 0; i < medications.length; i++) {
+      var m = medications[i];
+      if (todayChecks[m.id]) continue;
+      if (!isMedActiveToday(m)) continue;
+
+      var hour = parseInt(m.hour);
+      if (m.ampm === '오후' && hour !== 12) hour += 12;
+      if (m.ampm === '오전' && hour === 12) hour = 0;
+
+      var target = new Date();
+      target.setHours(hour, parseInt(m.minute||0), 0, 0);
+      var diff = target.getTime() - now.getTime();
+
+      // 10분 전 미리 알림
+      var preDiff = diff - (10 * 60 * 1000);
+      if (preDiff > 0) {
+        (function(med, delay) {
+          var t = setTimeout(function() {
+            if (!todayChecks[med.id]) {
+              fireNotification('⏰ 10분 후 복용 시간', med.name + ' 복용 시간이 곧 됩니다. 준비해주세요!', 'pre_' + med.id);
+            }
+          }, delay);
+          notiTimers.push(t);
+        })(m, preDiff);
+      }
+
+      // 정시 알림
+      if (diff > 0) {
+        (function(med, delay) {
+          var t = setTimeout(function() {
+            if (!todayChecks[med.id]) {
+              fireNotification('💊 복용 시간입니다!', med.name + ' ' + med.dose + ' 드실 시간이에요!', 'main_' + med.id);
+              startRepeatAlarm(med);
+            }
+          }, delay);
+          notiTimers.push(t);
+        })(m, diff);
+      }
+
+      // 이미 복용 시간이 지났고 아직 안 먹은 경우 → 바로 반복 알림 시작
+      if (diff <= 0 && diff > -60 * 60 * 1000) {
+        (function(med) {
+          startRepeatAlarm(med);
+        })(m);
+      }
+    }
+  }
+
+  // 반복 알림 (5분마다, 최대 6회 = 30분)
+  function startRepeatAlarm(med) {
+    var count = 0;
+    var maxRepeat = 6;
+    var intervalMs = 5 * 60 * 1000;
+
+    function doRepeat() {
+      count++;
+      if (count > maxRepeat) return;
+      if (todayChecks[med.id]) return;
+      var t = setTimeout(function() {
+        if (!todayChecks[med.id]) {
+          fireNotification('⚠️ 약 드셨나요?', med.name + ' 아직 복용하지 않았습니다! (' + count + '차 알림)', 'repeat_' + med.id + '_' + count);
+          doRepeat();
+        }
+      }, intervalMs);
+      notiTimers.push(t);
+    }
+    doRepeat();
+  }
+
+  // 알림 발송 + 소리 + 진동
+  function fireNotification(title, body, tag) {
+    // 진동
+    if (navigator.vibrate) {
+      navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+    // 소리
+    playAlarmSound();
+    // 브라우저 알림
+    new Notification(title, {
+      body: body,
+      icon: '💊',
+      tag: tag,
+      requireInteraction: true
+    });
+  }
+
+  // 알림 소리 (Web Audio API)
+  function playAlarmSound() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var notes = [523, 659, 784, 1047];
+      for (var i = 0; i < notes.length; i++) {
+        (function(freq, idx) {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+          gain.gain.value = 0.3;
+          var start = ctx.currentTime + idx * 0.2;
+          osc.start(start);
+          gain.gain.exponentialRampToValueAtTime(0.01, start + 0.3);
+          osc.stop(start + 0.35);
+        })(notes[i], i);
+      }
+    } catch(e) {}
+  }
+
+  // ─── 앱 시작 ───
+  loadData();
+  loadFontSize();
+  showDate();
+  initCalendar();
+  renderCheckList();
+  renderList();
+  renderContacts();
+  switchTab('check');
+  updateNotiBanner();
+  showInstallBanner();
+
+  // 서비스워커 등록
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function() {});
+  }
+</script>
+
+</body>
+</html>
