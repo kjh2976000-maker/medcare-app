@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "com.medcare.pillreminder",
-        "sha256_cert_fingerprints": ["E6:AE:56:E1:C6:13:C8:79:2C:A2:2A:2F:80:40:AB:96:54:87:53:C7:CE:93:33:E2:09:B2:16:79:3F:2F:DE:F9"]
+        "sha256_cert_fingerprints": ["52:CD:14:3B:B8:83:1D:1B:D0:A4:A1:F3:3E:6A:72:04:5E:4F:17:F5:C7:18:DB:B8:1D:20:B3:02:AE:18:3D:A0"]
       }
     }]
